@@ -1,3 +1,8 @@
+#![allow(dead_code)]
+mod model;
+
+use crate::model::Model;
+
 use image;
 use image::{ImageBuffer, Rgb};
 
@@ -5,13 +10,13 @@ const IMAGE_WIDTH: u32 = 100;
 const IMAGE_HEIGHT: u32 = 100;
 
 fn main() {
-    let mut imgbuf = image::ImageBuffer::new(
+    let mut imgbuf: ImageBuffer<Rgb<u8>, Vec<u8>> = image::ImageBuffer::new(
         IMAGE_WIDTH,
         IMAGE_HEIGHT);
 
-    draw_line(13, 20, 80, 40, &mut imgbuf, [255, 255, 255]);
-    draw_line(20, 13, 40, 80, &mut imgbuf, [255, 255, 255]);
-    draw_line(80, 40, 13, 20, &mut imgbuf, [255, 255, 255]);
+    let model = Model::new("head.obj");
+    println!("verts: {:?}", model.verts);
+    println!("faces: {:?}", model.faces);
 
     // flip vertically so that (0, 0) is in the bottom left corner
     image::imageops::flip_vertical_in_place(&mut imgbuf);
