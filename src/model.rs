@@ -3,11 +3,22 @@ use std::fs;
 use std::io::BufReader;
 use std::io::prelude::*;
 
-#[derive(Debug)]
+#[derive(Debug, Copy, Clone)]
 pub struct Vert {
     x: f64,
     y: f64,
-    z: f64
+    z: f64,
+}
+
+impl Vert {
+    fn new(line: &str) -> Self {
+        let coords = line.split(" ").collect::<Vec<&str>>();
+        Vert {
+            x: coords[1].parse().unwrap(),
+            y: coords[2].parse().unwrap(),
+            z: coords[3].parse().unwrap(),
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -15,9 +26,30 @@ pub struct Face {
     verts: [Vert; 3]
 }
 
+impl Face {
+    fn new(line: &str, verts: &Vec<Vert>) -> Self {
+        // we ignore the texture/normal coords, just want mesh data for now
+        let data = line.split(" ").collect::<Vec<&str>>();
+        let mut vert_indexes: [usize; 3] = [0; 3];
+        for i in 1..=3 {
+            vert_indexes[i - 1] = data[i].split("/")
+                .collect::<Vec<&str>>()[0]
+                .parse().unwrap();
+        }
+
+        Face {
+            verts: [
+                verts[vert_indexes[0] - 1],
+                verts[vert_indexes[1] - 1],
+                verts[vert_indexes[2] - 1],
+            ]
+        }
+    }
+}
+
 pub struct Model {
     pub verts: Vec<Vert>,
-    pub faces: Vec<Face>
+    pub faces: Vec<Face>,
 }
 
 impl Model {
@@ -41,8 +73,8 @@ impl Model {
                 };
 
                 match &line[0..x] {
-                    "v"  => verts.push(Model::parse_vert(&line)),
-                    "f"  => faces.push(Model::parse_face(&line, &verts)),
+                    "v"  => verts.push(Vert::new(&line)),
+                    "f"  => faces.push(Face::new(&line, &verts)),
                     "vt" => (), // TODO: texture coords
                     "vn" => (), // TODO: vertex normals
                     "vp" => (), // TODO: ???
@@ -56,37 +88,5 @@ impl Model {
         }
 
         Model {verts, faces}
-    }
-
-    fn parse_vert(line: &str) -> Vert {
-        let coords = line.split(" ").collect::<Vec<&str>>();
-        Vert {
-            x: coords[1].parse().unwrap(),
-            y: coords[2].parse().unwrap(),
-            z: coords[3].parse().unwrap()
-        }
-    }
-
-    fn parse_face(line: &str, verts: &Vec<Vert>) -> Face {
-        // TODO: actually parse the face lol
-        Face {
-            verts: [
-                Vert {
-                    x: 0.0,
-                    y: 0.0,
-                    z: 0.0
-                },
-                Vert {
-                    x: 0.0,
-                    y: 0.0,
-                    z: 0.0
-                },
-                Vert {
-                    x: 0.0,
-                    y: 0.0,
-                    z: 0.0
-                }
-            ]
-        }
     }
 }

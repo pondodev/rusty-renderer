@@ -15,8 +15,6 @@ fn main() {
         IMAGE_HEIGHT);
 
     let model = Model::new("head.obj");
-    println!("verts: {:?}", model.verts);
-    println!("faces: {:?}", model.faces);
 
     // flip vertically so that (0, 0) is in the bottom left corner
     image::imageops::flip_vertical_in_place(&mut imgbuf);
