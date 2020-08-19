@@ -5,66 +5,69 @@ use crate::model::Model;
 
 use image;
 use image::{ImageBuffer, Rgb};
+use std::mem::swap;
 
-const IMAGE_WIDTH: u32 = 100;
-const IMAGE_HEIGHT: u32 = 100;
+const IMAGE_WIDTH: u32 = 800;
+const IMAGE_HEIGHT: u32 = 800;
 
 fn main() {
     let mut imgbuf: ImageBuffer<Rgb<u8>, Vec<u8>> = image::ImageBuffer::new(
         IMAGE_WIDTH,
         IMAGE_HEIGHT);
 
-    let model = Model::new("head.obj");
+    let model = Model::new("models/head.obj");
+
+    for i in 0..model.faces.len() {
+        let face = &model.faces[i];
+        for j in 0..3 {
+            // get the two verts we wish to draw between
+            let v0 = &face.verts[j];
+            let v1 = &face.verts[(j + 1) % 3];
+
+            // get the screen space coords to draw to
+            let x0 = ((v0.x + 1.0) * IMAGE_WIDTH as f64 / 2.0) as i32;
+            let y0 = ((v0.y + 1.0) * IMAGE_HEIGHT as f64 / 2.0) as i32;
+            let x1 = ((v1.x + 1.0) * IMAGE_WIDTH as f64 / 2.0) as i32;
+            let y1 = ((v1.y + 1.0) * IMAGE_HEIGHT as f64 / 2.0) as i32;
+
+            draw_line(x0, y0, x1, y1, &mut imgbuf, [255, 255, 255]);
+        }
+    }
 
     // flip vertically so that (0, 0) is in the bottom left corner
     image::imageops::flip_vertical_in_place(&mut imgbuf);
 
-    imgbuf.save("output.tga").unwrap();
+    imgbuf.save("output.png").unwrap();
 }
 
 fn draw_pixel(imgbuf: &mut ImageBuffer<Rgb<u8>, Vec<u8>>, x: u32, y: u32, colour: [u8; 3]) {
-    let pixel = imgbuf.get_pixel_mut(x, y);
-    *pixel = image::Rgb(colour);
+    //println!("attempting to draw pixel: {}, {}", x, y);
+    if x < IMAGE_WIDTH && y < IMAGE_HEIGHT {
+        let pixel = imgbuf.get_pixel_mut(x, y);
+        *pixel = image::Rgb(colour);
+    }
 }
 
 fn draw_line(mut x0: i32, mut y0: i32, mut x1: i32, mut y1: i32, mut imgbuf: &mut ImageBuffer<Rgb<u8>, Vec<u8>>, colour: [u8; 3]) {
     let mut steep = false;
     if (x0 - x1).abs() < (y0 - y1).abs() {
         steep = true;
-        let mut temp = x0;
-        x0 = y0;
-        y0 = temp;
-
-        temp = x1;
-        x1 = y1;
-        y1 = temp;
+        swap(&mut x0, &mut y0);
+        swap(&mut x1, &mut y1);
     }
 
     if x0 > x1 {
-        let mut temp = x0;
-        x0 = x1;
-        x1 = temp;
-
-        temp = y0;
-        y0 = y1;
-        y1 = temp;
+        swap(&mut x0, &mut x1);
+        swap(&mut y0, &mut y1);
     }
 
-    let dx = x1 - x0;
-    let dy = y1 - y0;
-    let derror2 = dy.abs() * 2;
-    let mut error2 = 0;
-    let mut y = y0;
-    for x in x0..x1 {
+    for x in x0..=x1 {
+        let t = (x - x0) as f64 / (x1 - x0) as f64;
+        let y = y0 as f64 * (1.0 - t) + y1 as f64 * t;
         if steep {
             draw_pixel(&mut imgbuf, y as u32, x as u32, colour);
         } else {
             draw_pixel(&mut imgbuf, x as u32, y as u32, colour);
-        }
-
-        error2 += derror2;
-        if error2 > dx {
-            y += if y1 > y0 {1} else {-1};
         }
     }
 }

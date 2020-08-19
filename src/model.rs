@@ -5,9 +5,9 @@ use std::io::prelude::*;
 
 #[derive(Debug, Copy, Clone)]
 pub struct Vert {
-    x: f64,
-    y: f64,
-    z: f64,
+    pub x: f64,
+    pub y: f64,
+    pub z: f64,
 }
 
 impl Vert {
@@ -23,7 +23,7 @@ impl Vert {
 
 #[derive(Debug)]
 pub struct Face {
-    verts: [Vert; 3]
+    pub verts: [Vert; 3]
 }
 
 impl Face {
