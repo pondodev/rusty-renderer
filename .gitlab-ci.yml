@@ -1,0 +1,14 @@
+stages:
+  - build
+
+variables:
+  GIT_STRATEGY: fetch
+
+build:
+  stage: build
+  script:
+    - cargo build
+  artifacts:
+    name: $CI_PROJECT_NAME
+    paths:
+      - ./target
