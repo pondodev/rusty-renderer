@@ -1,4 +1,3 @@
-#![allow(dead_code)]
 use std::fs;
 use std::io::BufReader;
 use std::io::prelude::*;
