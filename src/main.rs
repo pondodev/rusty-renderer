@@ -1,6 +1,10 @@
 mod model;
+mod vert;
+mod face;
 
-use crate::model::{Model, Face};
+use model::Model;
+use vert::Vert;
+use face::Face;
 
 use image;
 use image::{ImageBuffer, Rgb};
@@ -14,7 +18,7 @@ fn main() {
         IMAGE_WIDTH,
         IMAGE_HEIGHT);
 
-    let model = Model::new("models/teapot.obj");
+    let model = Model::new("models/head.obj");
 
     for i in 0..model.faces.len() {
         draw_triangle(&model.faces[i], &mut imgbuf, [255, 255, 255]);
@@ -23,7 +27,7 @@ fn main() {
     // flip vertically so that (0, 0) is in the bottom left corner
     image::imageops::flip_vertical_in_place(&mut imgbuf);
 
-    imgbuf.save("output.png").unwrap();
+    imgbuf.save("output.png").expect("couldn't write to image");
 }
 
 fn draw_pixel(x: u32, y: u32, imgbuf: &mut ImageBuffer<Rgb<u8>, Vec<u8>>, colour: [u8; 3]) {
@@ -33,7 +37,13 @@ fn draw_pixel(x: u32, y: u32, imgbuf: &mut ImageBuffer<Rgb<u8>, Vec<u8>>, colour
     }
 }
 
-fn draw_line(mut x0: i32, mut y0: i32, mut x1: i32, mut y1: i32, mut imgbuf: &mut ImageBuffer<Rgb<u8>, Vec<u8>>, colour: [u8; 3]) {
+fn draw_line(v0: Vert, v1: Vert, mut imgbuf: &mut ImageBuffer<Rgb<u8>, Vec<u8>>, colour: [u8; 3]) {
+    // get the screen space coords to draw to
+    let mut x0 = ((v0.x + 1.0) * IMAGE_WIDTH as f64 / 2.0) as i32;
+    let mut y0 = ((v0.y + 1.0) * IMAGE_HEIGHT as f64 / 2.0) as i32;
+    let mut x1 = ((v1.x + 1.0) * IMAGE_WIDTH as f64 / 2.0) as i32;
+    let mut y1 = ((v1.y + 1.0) * IMAGE_HEIGHT as f64 / 2.0) as i32;
+
     let mut steep = false;
     if (x0 - x1).abs() < (y0 - y1).abs() {
         steep = true;
@@ -58,17 +68,14 @@ fn draw_line(mut x0: i32, mut y0: i32, mut x1: i32, mut y1: i32, mut imgbuf: &mu
 }
 
 fn draw_triangle(face: &Face, mut imgbuf: &mut ImageBuffer<Rgb<u8>, Vec<u8>>, colour: [u8; 3]) {
+    // draw edges
     for i in 0..3 {
         // get the two verts we wish to draw between
         let v0 = face.verts[i];
         let v1 = face.verts[(i + 1) % 3];
 
-        // get the screen space coords to draw to
-        let x0 = ((v0.x + 1.0) * IMAGE_WIDTH as f64 / 2.0) as i32;
-        let y0 = ((v0.y + 1.0) * IMAGE_HEIGHT as f64 / 2.0) as i32;
-        let x1 = ((v1.x + 1.0) * IMAGE_WIDTH as f64 / 2.0) as i32;
-        let y1 = ((v1.y + 1.0) * IMAGE_HEIGHT as f64 / 2.0) as i32;
-
-        draw_line(x0, y0, x1, y1, &mut imgbuf, colour);
+        draw_line(v0, v1, &mut imgbuf, colour);
     }
+
+    // TODO: fill faces
 }
