@@ -16,6 +16,10 @@ impl Vert {
             z: coords[3].parse().expect("failed to parse vert coords"),
         }
     }
+
+    pub fn lerp(&self, other: &Vert, t: f64) -> Vert {
+        *self + (*other - *self) * t
+    }
 }
 
 impl Add<Vert> for Vert {

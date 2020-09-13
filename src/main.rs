@@ -18,10 +18,10 @@ fn main() {
         IMAGE_WIDTH,
         IMAGE_HEIGHT);
 
-    let model = Model::new("models/head.obj");
+    let mut model = Model::new("models/cube.obj");
 
     for i in 0..model.faces.len() {
-        draw_triangle(&model.faces[i], &mut imgbuf, [255, 255, 255]);
+        draw_triangle(&mut model.faces[i], &mut imgbuf, [255, 255, 255]);
     }
 
     // flip vertically so that (0, 0) is in the bottom left corner
@@ -67,7 +67,7 @@ fn draw_line(v0: Vert, v1: Vert, mut imgbuf: &mut ImageBuffer<Rgb<u8>, Vec<u8>>,
     }
 }
 
-fn draw_triangle(face: &Face, mut imgbuf: &mut ImageBuffer<Rgb<u8>, Vec<u8>>, colour: [u8; 3]) {
+fn draw_triangle(face: &mut Face, mut imgbuf: &mut ImageBuffer<Rgb<u8>, Vec<u8>>, colour: [u8; 3]) {
     // draw edges
     for i in 0..3 {
         // get the two verts we wish to draw between
@@ -78,4 +78,41 @@ fn draw_triangle(face: &Face, mut imgbuf: &mut ImageBuffer<Rgb<u8>, Vec<u8>>, co
     }
 
     // TODO: fill faces
+    // sort verts ascending by y coord
+    face.sort_asc_y();
+
+    // fill entire tri if it is already flat top/bottom...
+    if face.verts[1].y == face.verts[2].y {
+        fill_tri_flat_bottom(face);
+    } else if face.verts[0].y == face.verts[1].y {
+        fill_tri_flat_top(face);
+    } else { // ...otherwise it's splittin time
+        let v0 = face.verts[0];
+        let v1 = face.verts[1];
+        let v2 = face.verts[2];
+        let v3 = Vert{
+            x: v0.x + ((v1.y - v0.y) / (v2.x - v0.x)),
+            y: v1.y,
+            z: 0.0,
+        };
+
+        let flat_bottom = Face {
+            verts: [v0, v1, v3],
+        };
+        let flat_top = Face {
+            verts: [v1, v3, v2],
+        };
+        fill_tri_flat_bottom(&flat_bottom);
+        fill_tri_flat_top(&flat_top);
+    }
+}
+
+fn fill_tri_flat_bottom(face: &Face) {
+    // TODO: actually write this lmao
+    let height = face.verts[1].y - face.verts[0].y;
+}
+
+fn fill_tri_flat_top(face: &Face) {
+    // TODO: actually write this lmao
+    let height = face.verts[2].y - face.verts[0].y;
 }

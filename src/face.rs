@@ -24,4 +24,18 @@ impl Face {
             ]
         }
     }
+
+    // sorts verts by y coords, ascending order
+    pub fn sort_asc_y(&mut self) {
+        // bubble sort wow
+        if self.verts[0].y > self.verts[1].y {
+            self.verts.swap(0, 1);
+        }
+        if self.verts[1].y > self.verts[2].y {
+            self.verts.swap(1, 2);
+        }
+        if self.verts[0].y > self.verts[1].y {
+            self.verts.swap(0, 1);
+        }
+    }
 }
