@@ -9,6 +9,7 @@ use face::Face;
 use image;
 use image::{ImageBuffer, Rgb};
 use std::mem::swap;
+use rand;
 
 const IMAGE_WIDTH: u32 = 800;
 const IMAGE_HEIGHT: u32 = 800;
@@ -18,10 +19,13 @@ fn main() {
         IMAGE_WIDTH,
         IMAGE_HEIGHT);
 
-    let mut model = Model::new("models/complicated_tri.obj");
+    let mut model = Model::new("models/tri.obj");
 
     for i in 0..model.faces.len() {
-        draw_triangle(&mut model.faces[i], &mut imgbuf, [255, 255, 255]);
+        let r = rand::random::<u8>();
+        let g = rand::random::<u8>();
+        let b = rand::random::<u8>();
+        draw_triangle(&mut model.faces[i], &mut imgbuf, [r, g, b]);
     }
 
     // flip vertically so that (0, 0) is in the bottom left corner
@@ -77,7 +81,6 @@ fn draw_triangle(face: &mut Face, mut imgbuf: &mut ImageBuffer<Rgb<u8>, Vec<u8>>
         draw_line(v0, v1, &mut imgbuf, colour);
     }
 
-    // TODO: fill faces
     // sort verts ascending by y coord
     face.sort_asc_y();
 
@@ -97,10 +100,10 @@ fn draw_triangle(face: &mut Face, mut imgbuf: &mut ImageBuffer<Rgb<u8>, Vec<u8>>
         };
 
         let flat_bottom = Face {
-            verts: [v0, v1, v3],
+            verts: [v1, v3, v2],
         };
         let flat_top = Face {
-            verts: [v1, v3, v2],
+            verts: [v0, v1, v3],
         };
         fill_tri_flat_bottom(&flat_bottom, &mut imgbuf, colour);
         fill_tri_flat_top(&flat_top, &mut imgbuf, colour);
@@ -109,12 +112,12 @@ fn draw_triangle(face: &mut Face, mut imgbuf: &mut ImageBuffer<Rgb<u8>, Vec<u8>>
 
 fn fill_tri_flat_bottom(face: &Face, mut imgbuf: &mut ImageBuffer<Rgb<u8>, Vec<u8>>, colour: [u8; 3]) {
     // TODO: don't hardcode lerp step value
-    let height = face.verts[1].y - face.verts[0].y;
-    let lerp_step = 0.0001;
+    let height = face.verts[2].y - face.verts[0].y;
+    let lerp_step = 0.1;
     let mut t = 0.0;
     while t <= 1.0 {
-        let v0 = face.verts[1].lerp(&face.verts[0], t);
-        let v1 = face.verts[2].lerp(&face.verts[0], t);
+        let v0 = face.verts[0].lerp(&face.verts[2], t);
+        let v1 = face.verts[1].lerp(&face.verts[2], t);
         draw_line(v0, v1, &mut imgbuf, colour);
         t = t + lerp_step;
     }
@@ -122,12 +125,12 @@ fn fill_tri_flat_bottom(face: &Face, mut imgbuf: &mut ImageBuffer<Rgb<u8>, Vec<u
 
 fn fill_tri_flat_top(face: &Face, mut imgbuf: &mut ImageBuffer<Rgb<u8>, Vec<u8>>, colour: [u8; 3]) {
     // TODO: don't hardcode lerp step value
-    let height = face.verts[2].y - face.verts[0].y;
-    let lerp_step = 0.0001;
+    let height = face.verts[1].y - face.verts[0].y;
+    let lerp_step = 0.1;
     let mut t = 0.0;
     while t <= 1.0 {
-        let v0 = face.verts[0].lerp(&face.verts[2], t);
-        let v1 = face.verts[1].lerp(&face.verts[2], t);
+        let v0 = face.verts[1].lerp(&face.verts[0], t);
+        let v1 = face.verts[2].lerp(&face.verts[0], t);
         draw_line(v0, v1, &mut imgbuf, colour);
         t = t + lerp_step;
     }
