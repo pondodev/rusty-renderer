@@ -18,7 +18,7 @@ fn main() {
         IMAGE_WIDTH,
         IMAGE_HEIGHT);
 
-    let mut model = Model::new("models/cube.obj");
+    let mut model = Model::new("models/complicated_tri.obj");
 
     for i in 0..model.faces.len() {
         draw_triangle(&mut model.faces[i], &mut imgbuf, [255, 255, 255]);
@@ -83,15 +83,15 @@ fn draw_triangle(face: &mut Face, mut imgbuf: &mut ImageBuffer<Rgb<u8>, Vec<u8>>
 
     // fill entire tri if it is already flat top/bottom...
     if face.verts[1].y == face.verts[2].y {
-        fill_tri_flat_bottom(face);
+        fill_tri_flat_top(face, &mut imgbuf, colour);
     } else if face.verts[0].y == face.verts[1].y {
-        fill_tri_flat_top(face);
+        fill_tri_flat_bottom(face, &mut imgbuf, colour);
     } else { // ...otherwise it's splittin time
         let v0 = face.verts[0];
         let v1 = face.verts[1];
         let v2 = face.verts[2];
-        let v3 = Vert{
-            x: v0.x + ((v1.y - v0.y) / (v2.x - v0.x)),
+        let v3 = Vert {
+            x: v0.x + ((v1.y - v0.y) / (v2.y - v0.y)) * (v2.x - v0.x),
             y: v1.y,
             z: 0.0,
         };
@@ -102,17 +102,33 @@ fn draw_triangle(face: &mut Face, mut imgbuf: &mut ImageBuffer<Rgb<u8>, Vec<u8>>
         let flat_top = Face {
             verts: [v1, v3, v2],
         };
-        fill_tri_flat_bottom(&flat_bottom);
-        fill_tri_flat_top(&flat_top);
+        fill_tri_flat_bottom(&flat_bottom, &mut imgbuf, colour);
+        fill_tri_flat_top(&flat_top, &mut imgbuf, colour);
     }
 }
 
-fn fill_tri_flat_bottom(face: &Face) {
-    // TODO: actually write this lmao
+fn fill_tri_flat_bottom(face: &Face, mut imgbuf: &mut ImageBuffer<Rgb<u8>, Vec<u8>>, colour: [u8; 3]) {
+    // TODO: don't hardcode lerp step value
     let height = face.verts[1].y - face.verts[0].y;
+    let lerp_step = 0.0001;
+    let mut t = 0.0;
+    while t <= 1.0 {
+        let v0 = face.verts[1].lerp(&face.verts[0], t);
+        let v1 = face.verts[2].lerp(&face.verts[0], t);
+        draw_line(v0, v1, &mut imgbuf, colour);
+        t = t + lerp_step;
+    }
 }
 
-fn fill_tri_flat_top(face: &Face) {
-    // TODO: actually write this lmao
+fn fill_tri_flat_top(face: &Face, mut imgbuf: &mut ImageBuffer<Rgb<u8>, Vec<u8>>, colour: [u8; 3]) {
+    // TODO: don't hardcode lerp step value
     let height = face.verts[2].y - face.verts[0].y;
+    let lerp_step = 0.0001;
+    let mut t = 0.0;
+    while t <= 1.0 {
+        let v0 = face.verts[0].lerp(&face.verts[2], t);
+        let v1 = face.verts[1].lerp(&face.verts[2], t);
+        draw_line(v0, v1, &mut imgbuf, colour);
+        t = t + lerp_step;
+    }
 }
